@@ -6,7 +6,7 @@ import gspread
 import re
 
 from datetime import datetime
-
+#passwords to access Google spreadsheet of general election results
 from passwords import *
 
 #from get_election_results import elect_results
@@ -16,6 +16,7 @@ ie_total = {}
 #total ie spending per candidate
 candid_total = {}
 org_total = {}
+primary_total = {}
 candids = {}
 names = {}
 winners = {}
@@ -48,8 +49,6 @@ generals =  generals()
 
 def Winning():
     # Login with your Google account.
-
-
     gc = gspread.login(email,password)
     doc_name = 'election_results'
     # Open a worksheet from spreadsheet with one shot
@@ -148,7 +147,7 @@ def IE_data_suck():
                         org_total[com_num][5] = amount + org_total[com_num][5]
                 elif winners.has_key(cand_num) and winners[cand_num][7] == "1":
                     if support_oppose == "Oppose":
-                        #money_loose 
+                        #money_lose 
                         org_total[com_num][4] = amount + org_total[com_num][4]
                     else:
                         #trash_money 
@@ -172,9 +171,9 @@ def IE_data_suck():
                         org_total[com_num][5] = amount + org_total[com_num][5]
                 elif winners.has_key(cand_num) and winners[cand_num][7] == "1":
                     if support_oppose == "Oppose":
-                        #money_loose
+                        #money_lose
                         org_total[com_num][4] = amount + org_total[com_num][4]
-                        #loose_count
+                        #lose_count
                         org_total[com_num][8] = 1 + org_total[com_num][8]
                     else:
                         #trash_money
@@ -185,27 +184,31 @@ def IE_data_suck():
                 
                 cand_tracker[com_num].append(cand_num)
                 org_total[com_num][2] += amount
+            
             else:
                 cand_count = 1
+                
+                #if won
                 if winners.has_key(cand_num) and winners[cand_num][1] == "1":
                     if support_oppose == "Support":
                         money_win = amount
-                        money_loose = 0
+                        money_lose = 0
                         win_count = 1
-                        loose_count = 0
+                        lose_count = 0
                         trash_money = 0
                     
                     else:
                         money_win = 0
                         win_count = 0
-                        loose_count = 0
-                        money_loose = 0
+                        lose_count = 0
+                        money_lose = 0
                         trash_money = amount 
-                        
+                
+                #if lost
                 elif winners.has_key(cand_num) and winners[cand_num][7] == "1":
                     if support_oppose == "Oppose":
-                        money_loose = amount
-                        loose_count = 1
+                        money_lose = amount
+                        lose_count = 1
                         money_win = 0
                         win_count = 0
                         trash_money = 0
@@ -214,29 +217,99 @@ def IE_data_suck():
                         trash_money = amount
                         money_win = 0
                         win_count = 0
-                        loose_count = 0
-                        money_loose = 0
+                        lose_count = 0
+                        money_lose = 0
+                
+                #if not called yet
                 else:
+                    print cand_num, cand_name, "not called"
                     money_win = 0
                     win_count = 0
-                    loose_count = 0
-                    money_loose = 0
+                    lose_count = 0
+                    money_lose = 0
                     trash_money = amount
+
                     
                 cand_tracker[com_num] = [cand_num]
+                
                 if org_total.has_key(com_num) and org_total[com_num][9] != 0:
-                    info = [com_name, com_num, amount, money_win, money_loose, trash_money, cand_count, win_count, loose_count, org_total[com_num][9], 0]
+                    info = [com_name, com_num, amount, money_win, money_lose, trash_money, cand_count, win_count, lose_count, org_total[com_num][9], 0]
                 else:
-                    info = [com_name, com_num, amount, money_win, money_loose, trash_money, cand_count, win_count, loose_count, primary, 0] 
+                    info = [com_name, com_num, amount, money_win, money_lose, trash_money, cand_count, win_count, lose_count, primary, 0] 
+                
                 org_total[com_num] = info
                 
        
+        elif pg == "P":
+            # if won primary
+            if com_num in generals or winners.has_key(cand_num):
+                if support_oppose == "Support":
+                    money_win = amount
+                    money_lose = 0
+                    win_count = 1
+                    lose_count = 0
+                    trash_money = 0
+
+                elif support_oppose == "Oppose": 
+                    money_win = 0
+                    win_count = 0
+                    lose_count = 0
+                    money_lose = 0
+                    trash_money = amount 
+
+            # lost or just not on the list
+            else:
+                if support_oppose == "Oppose":
+                    money_win = amount
+                    win_count = 0
+                    lose_count = 1
+                    money_lose = 0
+                    trash_money = 0
+                
+                elif support_oppose == "Support":
+                    money_win = 0
+                    win_count = 0
+                    lose_count = 0
+                    money_lose = 0
+                    trash_money = amount 
+
+
+
+            #if org_total.has_key(com_num):
+            #     org_total[com_num][9] += primary
+            # else:
+            #     org_total[com_num] = [com_name, com_num, 0, 0, 0, 0, 0, 0, 0, primary,0]
+         
+
+            if org_total.has_key(com_num):
+                #general election spending
+                amount = org_total[com_num][2]
+                money_win = org_total[com_num][3] + money_win
+                money_lose = org_total[com_num][4] + money_lose
+                trash_money = org_total[com_num][5] + trash_money
+                # How was I keeping track of that again?
+                #cand_count = org_total[com_num][6] + 1
+                win_count = org_total[com_num][7] + win_count
+                lose_count = org_total[com_num][8] + lose_count
+                info = [com_name, com_num, amount, money_win, money_lose, trash_money, cand_count, win_count, lose_count, org_total[com_num][9], 0]
+            else:
+                info = [com_name, com_num, amount, money_win, money_lose, trash_money, cand_count, win_count, lose_count, primary, 0] 
+            
+            if primary_total.has_key(com_num):
+
+            
+            else:
+
+
+            org_total[com_num] = info
+
         else:
             if org_total.has_key(com_num):
                 org_total[com_num][9] += primary
             else:
                 org_total[com_num] = [com_name, com_num, 0, 0, 0, 0, 0, 0, 0, primary,0]
-                
+
+
         if org_total[com_num][2] != 0:
             roi = (org_total[com_num][3] + org_total[com_num][4])/ org_total[com_num][2] * 100
             org_total[com_num][10] = roi
