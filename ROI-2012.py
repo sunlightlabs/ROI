@@ -274,12 +274,21 @@ def IE_data_suck():
                     trash_money = amount 
 
 
+            if primary_total.has_key(com_num):
+                #general election spending
+                amount = primary_total[com_num][2]
+                money_win = primary_total[com_num][3] + money_win
+                money_lose = primary_total[com_num][4] + money_lose
+                trash_money = primary_total[com_num][5] + trash_money
+                # How was I keeping track of that again?
+                #cand_count = primary_totalcom_num][6] + 1
+                win_count = primary_total[com_num][7] + win_count
+                lose_count = primary_total[com_num][8] + lose_count
 
-            #if org_total.has_key(com_num):
-            #     org_total[com_num][9] += primary
-            # else:
-            #     org_total[com_num] = [com_name, com_num, 0, 0, 0, 0, 0, 0, 0, primary,0]
-         
+                primary_info = [com_name, com_num, amount, money_win, money_lose, trash_money, cand_count, win_count, lose_count, org_total[com_num][9], 0]
+            
+            else:
+                primary_info = [com_name, com_num, amount, money_win, money_lose, trash_money, cand_count, win_count, lose_count, primary, 0] 
 
             if org_total.has_key(com_num):
                 #general election spending
@@ -294,15 +303,11 @@ def IE_data_suck():
                 info = [com_name, com_num, amount, money_win, money_lose, trash_money, cand_count, win_count, lose_count, org_total[com_num][9], 0]
             else:
                 info = [com_name, com_num, amount, money_win, money_lose, trash_money, cand_count, win_count, lose_count, primary, 0] 
-            
-            if primary_total.has_key(com_num):
-
-            
-            else:
-
 
             org_total[com_num] = info
+            primary_total[com_num] = primary_info
 
+        # Special elections that I am not dealing with yet
         else:
             if org_total.has_key(com_num):
                 org_total[com_num][9] += primary
@@ -312,6 +317,10 @@ def IE_data_suck():
 
         if org_total[com_num][2] != 0:
             roi = (org_total[com_num][3] + org_total[com_num][4])/ org_total[com_num][2] * 100
+            org_total[com_num][10] = roi
+
+        if primary_total[com_num][2] != 0:
+            roi = (oprimary_total[com_num][3] + primary_total[com_num][4])/ primary_total[com_num][2] * 100
             org_total[com_num][10] = roi
 
         """Candidate Totals"""
@@ -349,7 +358,7 @@ day = str(datetime.today())[:10]
 
 ie_name = 'ie_stats' + day + '.csv'
 writer = csv.writer(open(ie_name,'wb'))
-labels = ["total spent in general", "committee name", "committee number", "super pac", "candidate", "support/oppose", "party", "state", "total spent in Primary or other elections", "result", "candidate identifier"]
+labels = ["total spent in general", "committee name", "committee number", "super PAC", "candidate", "support/oppose", "party", "state", "total spent in Primary or other elections", "result", "candidate identifier"]
 writer.writerow(labels)
 for org in ie_total.keys():
     for k in ie_total[org]:
@@ -361,6 +370,13 @@ labels = ["Committee Name", "FEC ID", "General Election Spending", "money to sup
 writer.writerow(labels)
 for com in org_total.keys():
     writer.writerow(org_total[com])   
+
+primary_name = 'primary_stats' + day + '.csv'
+writer = csv.writer(open(primary_name,'wb'))
+labels = ["Committee Name", "FEC ID", "General Election Spending", "money to support winning candidates in Primary", "money to oppose loosing candidates in Primary", "Money that did not produce intended result in primary", "number of candidates mentioned in primary", "Number of supported candidates that won primary", "number of opposed candidates that lost primary", "spending in primary or other election", "ROI in primary"]
+writer.writerow(labels)
+for com in primary_total.keys():
+    writer.writerow(primary_total[com])  
 
 cand_name = 'cand_test' + day + '.csv'
 writer = csv.writer(open(cand_name,'wb'))
